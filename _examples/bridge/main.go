@@ -8,7 +8,7 @@ import (
 	"github.com/inconshreveable/log15"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client"
+	"github.com/Marquis42/ari-proxy/client"
 	"github.com/CyCoreSystems/ari/ext/play"
 	"github.com/CyCoreSystems/ari/rid"
 	"github.com/pkg/errors"

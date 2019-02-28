@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/Marquis42/ari-proxy/proxy"
 )
 
 func (s *Server) playbackControl(ctx context.Context, reply string, req *proxy.Request) {

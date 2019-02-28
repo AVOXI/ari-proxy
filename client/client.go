@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client/bus"
-	"github.com/CyCoreSystems/ari-proxy/client/cluster"
-	"github.com/CyCoreSystems/ari-proxy/proxy"
+	"github.com/Marquis42/ari-proxy/client/bus"
+	"github.com/Marquis42/ari-proxy/client/cluster"
+	"github.com/Marquis42/ari-proxy/proxy"
 	"github.com/CyCoreSystems/ari/rid"
 
 	"github.com/inconshreveable/log15"

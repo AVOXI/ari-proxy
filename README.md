@@ -41,7 +41,7 @@ However, it does need to know how to connect to both Asterisk and NATS.
      cycoresystems/ari-proxy
 ```
 
-Binary releases are available on the [releases page](https://github.com/CyCoreSystems/ari-proxy/releases).
+Binary releases are available on the [releases page](https://github.com/Marquis42/ari-proxy/releases).
 
 You can also install the server manually.  It is not (yet) go-gettable, but we
 use [dep](https://github.com/golang/dep) for dependency management.
@@ -57,7 +57,7 @@ You may need to explicitly install dependencies for this to work
 
 `ari-proxy` uses semantic versioning and [dep](https://github.com/golang/dep).
 To use it in your own Go package, simply reference the
-`github.com/CyCoreSystems/ari-proxy/client` package, and your dependency management
+`github.com/Marquis42/ari-proxy/client` package, and your dependency management
 tool should be able to manage it.
 
 For manual dependency management:
@@ -77,7 +77,7 @@ Connecting the client to NATS is simple:
 ```go
 import (
    "github.com/CyCoreSystems/ari"
-   "github.com/CyCoreSystems/ari-proxy/client"
+   "github.com/Marquis42/ari-proxy/client"
 )
 
 func connect(ctx context.Context, appName string) (ari.Client,error) {

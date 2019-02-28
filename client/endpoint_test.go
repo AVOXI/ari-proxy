@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari-proxy/internal/integration"
+	"github.com/Marquis42/ari-proxy/internal/integration"
 )
 
 func TestEndpointList(t *testing.T) {

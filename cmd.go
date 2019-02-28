@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/CyCoreSystems/ari-proxy/server"
+	"github.com/Marquis42/ari-proxy/server"
 	"github.com/CyCoreSystems/ari/client/native"
 
 	"github.com/inconshreveable/log15"

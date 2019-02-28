@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari-proxy/internal/integration"
+	"github.com/Marquis42/ari-proxy/internal/integration"
 )
 
 func TestLoggingList(t *testing.T) {
