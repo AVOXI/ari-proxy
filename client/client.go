@@ -578,14 +578,18 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
 		responseCount++
 
-		// always send up reply, so we can track errors.
-		replyChan <- o
-
+		if responseCount <= expected {
+			// always send up reply, so we can track errors.
+			replyChan <- o
+		}
 		if responseCount >= expected {
-			fmt.Printf("Key: %v, responseCount is %d, expected %d", req.Key, responseCount, expected)
+			if responseCount > expected {
+				fmt.Printf("Key: %v, responseCount is %d, expected %d", req.Key, responseCount, expected)
+			}
 			close(replyChan)
 		}
 	})
+
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to subscribe to data responses")
 	}
