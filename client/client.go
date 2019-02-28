@@ -2,14 +2,15 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/rid"
 	"github.com/Marquis42/ari-proxy/client/bus"
 	"github.com/Marquis42/ari-proxy/client/cluster"
 	"github.com/Marquis42/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats"
@@ -581,6 +582,7 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 		replyChan <- o
 
 		if responseCount >= expected {
+			fmt.Printf("Key: %v, responseCount is %d, expected %d", req.Key, responseCount, expected)
 			close(replyChan)
 		}
 	})
