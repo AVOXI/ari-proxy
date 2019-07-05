@@ -586,6 +586,8 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 			if responseCount > expected {
 				fmt.Printf("Key: %v, responseCount is %d, expected %d", req.Key, responseCount, expected)
 			}
+		}
+		if responseCount == expected {
 			close(replyChan)
 		}
 	})
