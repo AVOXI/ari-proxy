@@ -28,7 +28,7 @@ import (
 var ClosureGracePeriod = 10 * time.Second
 
 // DefaultRequestTimeout is the default timeout for a NATS request.  (Note: Answer() takes longer than 250ms on average)
-const DefaultRequestTimeout = 500 * time.Millisecond
+var DefaultRequestTimeout = 500 * time.Millisecond
 
 // DefaultInputBufferLength is the default size of the event buffer for events
 // coming in from NATS
@@ -215,6 +215,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		},
 		cancel: cancel,
 	}
+	log15.Info("ari-proxy", "DefaultRequestTimeout", DefaultRequestTimeout)
 	c.log.SetHandler(log15.DiscardHandler())
 
 	// Load environment-based configurations
