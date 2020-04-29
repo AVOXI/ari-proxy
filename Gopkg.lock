@@ -2,7 +2,8 @@
 
 
 [[projects]]
-  digest = "1:a00c0cd8fb85f1b35d3cddb7c1ee8d37ced4c36ca80a1f7759cab44bfe0da6d5"
+  branch = "fix_close_panic"
+  digest = "1:7590bb61a03a6bbb33494e7b098920dcf031dd199f74b34972989a2a41b60531"
   name = "github.com/CyCoreSystems/ari"
   packages = [
     ".",
@@ -12,8 +13,8 @@
     "stdbus",
   ]
   pruneopts = ""
-  revision = "0b99272cec6482252f0f578329fcc197cb54cee2"
-  version = "v4.8.3"
+  revision = "c540a9f4f5d16d8bc87c231fdd95c8e1549d992c"
+  source = "github.com/Marquis42/ari"
 
 [[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"
