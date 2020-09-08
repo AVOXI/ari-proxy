@@ -8,9 +8,9 @@ import (
 
 	"github.com/CyCoreSystems/ari"
 	"github.com/CyCoreSystems/ari/rid"
-	"github.com/Marquis42/ari-proxy/client/bus"
-	"github.com/Marquis42/ari-proxy/client/cluster"
-	"github.com/Marquis42/ari-proxy/proxy"
+	"github.com/AVOXI/ari-proxy/client/bus"
+	"github.com/AVOXI/ari-proxy/client/cluster"
+	"github.com/AVOXI/ari-proxy/proxy"
 
 	"github.com/inconshreveable/log15"
 	"github.com/nats-io/nats"

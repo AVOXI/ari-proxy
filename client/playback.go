@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/CyCoreSystems/ari"
-	"github.com/Marquis42/ari-proxy/proxy"
+	"github.com/AVOXI/ari-proxy/proxy"
 )
 
 type playback struct {

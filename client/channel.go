@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/Marquis42/ari-proxy/proxy"
+	"github.com/AVOXI/ari-proxy/proxy"
 	"github.com/CyCoreSystems/ari/rid"
 )
 
