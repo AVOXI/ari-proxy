@@ -14,7 +14,7 @@
   ]
   pruneopts = ""
   revision = "c540a9f4f5d16d8bc87c231fdd95c8e1549d992c"
-  source = "github.com/Marquis42/ari"
+  source = "github.com/AVOXI/ari"
 
 [[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"

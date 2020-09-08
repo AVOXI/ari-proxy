@@ -1,6 +1,6 @@
 package server
 
-import "github.com/Marquis42/ari-proxy/session"
+import "github.com/AVOXI/ari-proxy/session"
 
 // Reply is a function which, when called, replies to the request via the
 // response object or error.

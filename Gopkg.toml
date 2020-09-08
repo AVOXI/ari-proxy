@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/CyCoreSystems/ari"
-  source = "github.com/Marquis42/ari"
+  source = "github.com/AVOXI/ari"
   branch = "fix_close_panic"
 
 [[constraint]]

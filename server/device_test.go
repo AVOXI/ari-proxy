@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/Marquis42/ari-proxy/internal/integration"
+	"github.com/AVOXI/ari-proxy/internal/integration"
 )
 
 func TestDeviceData(t *testing.T) {

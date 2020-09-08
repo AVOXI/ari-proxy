@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/Marquis42/ari-proxy/client"
+	"github.com/AVOXI/ari-proxy/client"
 	"github.com/CyCoreSystems/ari/client/native"
 
 	"github.com/inconshreveable/log15"

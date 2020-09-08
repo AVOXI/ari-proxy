@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/Marquis42/ari-proxy/proxy"
+	"github.com/AVOXI/ari-proxy/proxy"
 )
 
 func (s *Server) asteriskModuleLoad(ctx context.Context, reply string, req *proxy.Request) {

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/CyCoreSystems/ari"
-	"github.com/Marquis42/ari-proxy/proxy"
-	"github.com/Marquis42/ari-proxy/server/dialog"
+	"github.com/AVOXI/ari-proxy/proxy"
+	"github.com/AVOXI/ari-proxy/server/dialog"
 	"github.com/CyCoreSystems/ari/client/native"
 
 	"github.com/inconshreveable/log15"
