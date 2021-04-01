@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/CyCoreSystems/ari"
@@ -268,6 +270,7 @@ func (s *Server) runEventHandler(ctx context.Context) {
 			return
 		case e := <-sub.Events():
 			s.Log.Debug("event received", "kind", e.GetType())
+			fmt.Printf("Event: %s\n", DumpVar(e))
 
 			// Publish event to canonical destination
 			s.publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
@@ -289,6 +292,7 @@ func (s *Server) pingHandler(m *nats.Msg) {
 
 // publish sends a message out over NATS, logging any error
 func (s *Server) publish(subject string, msg interface{}) {
+	fmt.Printf("Publish: %s\n", DumpVar(msg))
 	if err := s.nats.Publish(subject, msg); err != nil {
 		s.Log.Warn("failed to publish NATS message", "subject", subject, "data", msg, "error", err)
 	}
@@ -307,6 +311,7 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	var f func(context.Context, string, *proxy.Request)
 
 	s.Log.Debug("received request", "kind", req.Kind)
+	fmt.Printf("Request: %s\n", DumpVar(req))
 	switch req.Kind {
 	case "ApplicationData":
 		f = s.applicationData
@@ -531,6 +536,36 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 
 func (s *Server) sendError(reply string, err error) {
 	s.publish(reply, proxy.NewErrorResponse(err))
+}
+
+func dumper(level int, o interface{}) string {
+	if level > 3 {
+		return ""
+	}
+	theRef := reflect.ValueOf(o)
+	if theRef.Kind() == reflect.Ptr {
+		if theRef.IsNil() {
+			return fmt.Sprintf("nil(%s) ", theRef.Type().Name())
+		}
+		theRef = theRef.Elem()
+	}
+	var b strings.Builder
+	_, _ = fmt.Fprintf(&b, "%s: ", theRef.Type().Name())
+	for i := 0; i < theRef.NumField(); i++ {
+		f := theRef.Field(i)
+		if f.Kind() == reflect.Ptr {
+			if !f.IsNil() {
+				_, _ = fmt.Fprintf(&b, "%*s.%s(%s): [%s] ", level, "", theRef.Type().Field(0).Name, f.Type(), dumper(level + 1, reflect.Indirect(f).Interface()))
+			}
+		} else if !f.IsZero() {
+			_, _ = fmt.Fprintf(&b, ".%s(%s): [%v]  ", theRef.Type().Field(0).Name, f.Type(), f.Interface())
+		}
+	}
+	return b.String()
+}
+
+func DumpVar(o interface{}) string {
+	return dumper(1, o)
 }
 
 /*
