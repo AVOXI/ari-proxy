@@ -270,7 +270,7 @@ func (s *Server) runEventHandler(ctx context.Context) {
 			return
 		case e := <-sub.Events():
 			s.Log.Debug("event received", "kind", e.GetType())
-			fmt.Printf("Event: %s\n", DumpVar(e))
+			fmt.Printf("ARINATSDBG Event: %s\n", DumpVar(e))
 
 			// Publish event to canonical destination
 			s.publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
@@ -292,7 +292,7 @@ func (s *Server) pingHandler(m *nats.Msg) {
 
 // publish sends a message out over NATS, logging any error
 func (s *Server) publish(subject string, msg interface{}) {
-	fmt.Printf("Publish: %s\n", DumpVar(msg))
+	fmt.Printf("ARINATSDBG Publish: %s\n", DumpVar(msg))
 	if err := s.nats.Publish(subject, msg); err != nil {
 		s.Log.Warn("failed to publish NATS message", "subject", subject, "data", msg, "error", err)
 	}
@@ -311,7 +311,7 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 	var f func(context.Context, string, *proxy.Request)
 
 	s.Log.Debug("received request", "kind", req.Kind)
-	fmt.Printf("Request: %s\n", DumpVar(req))
+	fmt.Printf("ARINATSDBG Request: %s\n", DumpVar(req))
 	switch req.Kind {
 	case "ApplicationData":
 		f = s.applicationData
