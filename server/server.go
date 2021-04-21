@@ -85,8 +85,8 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
 		s.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
 		time.Sleep(DefaultNATSReconnectionWait)
-        	nc, err = nats.Connect(natsURI)
-                reconnectionAttempts -= 1
+		nc, err = nats.Connect(natsURI)
+		reconnectionAttempts -= 1
 	}
 	if err != nil {
 		return eris.Wrap(err, "failed to connect to NATS")
@@ -310,7 +310,7 @@ func (s *Server) runEventHandler(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case e := <-sub.Events():
-			s.Log.Debug("event received", "kind", e.GetType())
+			s.Log.Debug("event received", "kind", e.GetType(), "keys", e.Keys())
 
 			// Publish event to canonical destination
 			s.publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
@@ -355,7 +355,7 @@ func (s *Server) newRequestHandler(ctx context.Context) func(subject string, rep
 func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
 	var f func(context.Context, string, *proxy.Request)
 
-	s.Log.Debug("received request", "kind", req.Kind)
+	s.Log.Debug("received request", "kind", req.Kind, "key", req.Key)
 	switch req.Kind {
 	case "ApplicationData":
 		f = s.applicationData
