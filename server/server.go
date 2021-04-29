@@ -52,6 +52,14 @@ type Server struct {
 
 	// Log is the log15.Logger for the service.  You may replace or call SetHandler() on this at any time to change the logging of the service.
 	Log log15.Logger
+
+	// Metrics is optional and when provided ari-proxy invokes OnXXX when an event or request is received
+	Metrics Metrics
+}
+
+type Metrics interface {
+	OnEvent(id string)
+	OnRequest(id string)
 }
 
 // New returns a new Server
@@ -312,6 +320,9 @@ func (s *Server) runEventHandler(ctx context.Context) {
 		case e := <-sub.Events():
 			s.Log.Debug("event received", "kind", e.GetType(), "keys", e.Keys())
 
+			if s.Metrics != nil {
+				s.Metrics.OnEvent(e.GetType())
+			}
 			// Publish event to canonical destination
 			s.publish(fmt.Sprintf("%sevent.%s.%s", s.NATSPrefix, s.Application, s.AsteriskID), e)
 
@@ -581,6 +592,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = func(ctx context.Context, reply string, req *proxy.Request) {
 			s.sendError(reply, eris.New("Not implemented"))
 		}
+	}
+
+	if s.Metrics != nil {
+		s.Metrics.OnRequest(req.Kind)
 	}
 
 	f(ctx, reply, req)
