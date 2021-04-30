@@ -18,7 +18,7 @@ func natsConnect() (*nats.EncodedConn, error) {
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to connect to NATS")
 	}
-	nc, err := nats.NewEncodedConn(c, nats.JSON_ENCODER)
+	nc, err := nats.NewEncodedConn(c, nats.GOB_ENCODER)
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to encode NATS connection")
 	}

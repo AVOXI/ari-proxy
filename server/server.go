@@ -99,7 +99,7 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 	if err != nil {
 		return eris.Wrap(err, "failed to connect to NATS")
 	}
-	s.nats, err = nats.NewEncodedConn(nc, nats.JSON_ENCODER)
+	s.nats, err = nats.NewEncodedConn(nc, nats.GOB_ENCODER)
 	if err != nil {
 		return eris.Wrap(err, "failed to encode NATS connection")
 	}

@@ -149,7 +149,7 @@ func (c *core) Start() error {
 			return eris.Wrap(err, "failed to connect to NATS")
 		}
 
-		c.nc, err = nats.NewEncodedConn(n, nats.JSON_ENCODER)
+		c.nc, err = nats.NewEncodedConn(n, nats.GOB_ENCODER)
 		if err != nil {
 			n.Close() // need this here because nc is not yet bound to the core
 			c.close()
