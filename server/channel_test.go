@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari-proxy/internal/integration"
+	"github.com/CyCoreSystems/ari-proxy/v5/internal/integration"
 )
 
 func TestChannelData(t *testing.T) {
@@ -96,6 +96,10 @@ func TestChannelRecord(t *testing.T) {
 
 func TestChannelSnoop(t *testing.T) {
 	integration.TestChannelSnoop(t, &srv{})
+}
+
+func TestChannelExternalMedia(t *testing.T) {
+	integration.TestChannelExternalMedia(t, &srv{})
 }
 
 func TestChannelSendDTMF(t *testing.T) {

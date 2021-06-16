@@ -3,17 +3,18 @@ package client
 import (
 	"context"
 	"os"
+	"sync"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client/bus"
-	"github.com/CyCoreSystems/ari-proxy/client/cluster"
-	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	"github.com/CyCoreSystems/ari-proxy/v5/client/bus"
+	"github.com/CyCoreSystems/ari-proxy/v5/client/cluster"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
+	"github.com/rotisserie/eris"
 
 	"github.com/inconshreveable/log15"
-	"github.com/nats-io/nats"
-	"github.com/pkg/errors"
+	"github.com/nats-io/nats.go"
 )
 
 // ClosureGracePeriod is the amount of time to wait after the closure of the
@@ -27,7 +28,7 @@ import (
 var ClosureGracePeriod = 10 * time.Second
 
 // DefaultRequestTimeout is the default timeout for a NATS request.  (Note: Answer() takes longer than 250ms on average)
-const DefaultRequestTimeout = 500 * time.Millisecond
+var DefaultRequestTimeout = 500 * time.Millisecond
 
 // DefaultInputBufferLength is the default size of the event buffer for events
 // coming in from NATS
@@ -38,7 +39,7 @@ const DefaultInputBufferLength = 100
 var DefaultClusterMaxAge = 5 * time.Minute
 
 // ErrNil indicates that the request returned an empty response
-var ErrNil = errors.New("Nil")
+var ErrNil = eris.New("Nil")
 
 // core is the core, functional piece of a Client which is the same across the
 // family of derived clients.  It manages stateful elements such as the bus,
@@ -145,14 +146,14 @@ func (c *core) Start() error {
 		n, err := nats.Connect(c.uri)
 		if err != nil {
 			c.close()
-			return errors.Wrap(err, "failed to connect to NATS")
+			return eris.Wrap(err, "failed to connect to NATS")
 		}
 
 		c.nc, err = nats.NewEncodedConn(n, nats.JSON_ENCODER)
 		if err != nil {
 			n.Close() // need this here because nc is not yet bound to the core
 			c.close()
-			return errors.Wrap(err, "failed to encode NATS connection")
+			return eris.Wrap(err, "failed to encode NATS connection")
 		}
 
 		c.closeNATSOnClose = true
@@ -165,7 +166,7 @@ func (c *core) Start() error {
 	err := c.maintainCluster()
 	if err != nil {
 		c.close()
-		return errors.Wrap(err, "failed to start cluster maintenance")
+		return eris.Wrap(err, "failed to start cluster maintenance")
 	}
 
 	return nil
@@ -176,7 +177,7 @@ func (c *core) maintainCluster() (err error) {
 		c.cluster.Update(o.Node, o.Application)
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to listen to proxy announcements")
+		return eris.Wrap(err, "failed to listen to proxy announcements")
 	}
 
 	// Send an initial ping for proxy announcements
@@ -229,7 +230,7 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	// Start the core, if it is not already started
 	err := c.core.Start()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start core")
+		return nil, eris.Wrap(err, "failed to start core")
 	}
 
 	// Create the bus
@@ -341,6 +342,20 @@ func WithTimeoutRetries(count int) OptionFunc {
 // ApplicationName returns the ARI application's name
 func (c *Client) ApplicationName() string {
 	return c.appName
+}
+
+// Connected indicates whether the client is connected through to at least one ARI websocket
+func (c *Client) Connected() bool {
+	if c.closed {
+		return false
+	}
+
+	// TODO: this is a surrogate indicator with low resolution... we should have
+	// something more proactive and concrete
+	if len(c.cluster.App(c.appName, proxy.AnnouncementInterval*2)) < 1 {
+		return false
+	}
+	return true
 }
 
 // Close shuts down the client
@@ -462,7 +477,6 @@ func (c *Client) getRequest(req *proxy.Request) (*ari.Key, error) {
 
 func (c *Client) dataRequest(req *proxy.Request) (*proxy.EntityData, error) {
 	resp, err := c.makeRequest("data", req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -515,7 +529,7 @@ func (c *Client) makeRequest(class string, req *proxy.Request) (*proxy.Response,
 
 func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*proxy.Response, err error) {
 	if req == nil {
-		return nil, errors.New("empty request")
+		return nil, eris.New("empty request")
 	}
 	if req.Key == nil {
 		req.Key = ari.NewKey("", "")
@@ -535,14 +549,14 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 		}
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to subscribe to data responses")
+		return nil, eris.Wrap(err, "failed to subscribe to data responses")
 	}
 	defer replySub.Unsubscribe() // nolint: errcheck
 
 	// Make an all-call for the entity data
 	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to make request for data")
+		return nil, eris.Wrap(err, "failed to make request for data")
 	}
 
 	// Wait for replies
@@ -559,40 +573,63 @@ func (c *Client) makeRequests(class string, req *proxy.Request) (responses []*pr
 	}
 }
 
+type limitedResponseForwarder struct {
+	closed   bool
+	count    int
+	expected int
+	fwdChan  chan *proxy.Response
+
+	mu sync.Mutex
+}
+
+func (f *limitedResponseForwarder) Forward(o *proxy.Response) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.count++
+
+	if f.closed {
+		return
+	}
+
+	// always send up reply, so we can track errors.
+	select {
+	case f.fwdChan <- o:
+	default:
+	}
+
+	if f.count >= f.expected {
+		f.closed = true
+		close(f.fwdChan)
+	}
+}
+
 // TODO: simplify
-// nolint: gocyclo
 func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *proxy.Request) (*proxy.Response, error) {
 	if req == nil {
-		return nil, errors.New("empty request")
+		return nil, eris.New("empty request")
 	}
+
 	if req.Key == nil {
 		req.Key = ari.NewKey("", "")
 	}
 
-	expected := len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge))
 	reply := rid.New("rp")
-	replyChan := make(chan *proxy.Response)
 
-	var responseCount int
-	replySub, err := c.core.nc.Subscribe(reply, func(o *proxy.Response) {
-		responseCount++
+	rf := &limitedResponseForwarder{
+		expected: len(c.core.cluster.Matching(req.Key.Node, req.Key.App, c.core.clusterMaxAge)),
+		fwdChan:  make(chan *proxy.Response),
+	}
 
-		// always send up reply, so we can track errors.
-		replyChan <- o
-
-		if responseCount >= expected {
-			close(replyChan)
-		}
-	})
+	replySub, err := c.core.nc.Subscribe(reply, rf.Forward)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to subscribe to data responses")
+		return nil, eris.Wrap(err, "failed to subscribe to data responses")
 	}
 	defer replySub.Unsubscribe() // nolint: errcheck
 
 	// Make an all-call for the entity data
-	err = c.core.nc.PublishRequest(c.subject(class, req), reply, req)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to make request for data")
+	if err = c.core.nc.PublishRequest(c.subject(class, req), reply, req); err != nil {
+		return nil, eris.Wrap(err, "failed to make request for data")
 	}
 
 	// Wait for replies
@@ -601,20 +638,21 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 		case <-time.After(c.requestTimeout):
 			// Return the last error if we got one; otherwise, return a timeout error
 			if err == nil {
-				err = errors.New("timeout")
+				err = eris.New("timeout")
 			}
+
 			return nil, err
-		case resp, more := <-replyChan:
+		case resp, more := <-rf.fwdChan:
 			if !more {
 				if err == nil {
-					err = errors.New("no data")
+					err = eris.New("no data")
 				}
+
 				return nil, err
 			}
 			if resp != nil {
-				err = resp.Err() // store the error for later return
-				if err == nil {  // No error means to return the current value
-					return resp, nil
+				if err = resp.Err(); err == nil { // store the error for later return
+					return resp, nil // No error means to return the current value
 				}
 			}
 		}

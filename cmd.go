@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/CyCoreSystems/ari-proxy/server"
-	"github.com/CyCoreSystems/ari/client/native"
+	"github.com/CyCoreSystems/ari-proxy/v5/server"
+	"github.com/CyCoreSystems/ari/v5/client/native"
 
 	"github.com/inconshreveable/log15"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -33,7 +33,7 @@ var RootCmd = &cobra.Command{
 			os.Exit(0)
 		}
 
-		var handler = log15.StdoutHandler
+		handler := log15.StdoutHandler
 		if viper.GetBool("verbose") {
 			Log.Info("verbose logging enabled")
 			handler = log15.LvlFilterHandler(log15.LvlDebug, handler)
@@ -98,7 +98,6 @@ func readConfig() {
 }
 
 func runServer(ctx context.Context, log log15.Logger) error {
-
 	natsURL := viper.GetString("nats.url")
 	if os.Getenv("NATS_SERVICE_HOST") != "" {
 		natsURL = "nats://" + os.Getenv("NATS_SERVICE_HOST") + ":" + os.Getenv("NATS_SERVICE_PORT_CLIENT")
@@ -115,5 +114,4 @@ func runServer(ctx context.Context, log log15.Logger) error {
 		URL:          viper.GetString("ari.http_url"),
 		WebsocketURL: viper.GetString("ari.websocket_url"),
 	}, natsURL)
-
 }

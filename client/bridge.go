@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
 )
 
 type bridge struct {
@@ -74,11 +74,22 @@ func (b *bridge) Data(key *ari.Key) (*ari.BridgeData, error) {
 }
 
 func (b *bridge) AddChannel(key *ari.Key, channelID string) error {
+	return b.AddChannelWithOptions(key, channelID, nil)
+}
+
+func (b *bridge) AddChannelWithOptions(key *ari.Key, channelID string, options *ari.BridgeAddChannelOptions) error {
+	if options == nil {
+		options = new(ari.BridgeAddChannelOptions)
+	}
+
 	return b.c.commandRequest(&proxy.Request{
 		Kind: "BridgeAddChannel",
 		Key:  key,
 		BridgeAddChannel: &proxy.BridgeAddChannel{
-			Channel: channelID,
+			Channel:    channelID,
+			AbsorbDTMF: options.AbsorbDTMF,
+			Mute:       options.Mute,
+			Role:       options.Role,
 		},
 	})
 }
@@ -118,6 +129,9 @@ func (b *bridge) StopMOH(key *ari.Key) error {
 }
 
 func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
+	if id == "" {
+		id = rid.New(rid.Playback)
+	}
 	k, err := b.c.createRequest(&proxy.Request{
 		Kind: "BridgePlay",
 		Key:  key,
@@ -133,6 +147,9 @@ func (b *bridge) Play(key *ari.Key, id string, uri string) (*ari.PlaybackHandle,
 }
 
 func (b *bridge) StagePlay(key *ari.Key, id string, uri string) (*ari.PlaybackHandle, error) {
+	if id == "" {
+		id = rid.New(rid.Playback)
+	}
 	k, err := b.c.getRequest(&proxy.Request{
 		Kind: "BridgeStagePlay",
 		Key:  key,
@@ -213,4 +230,21 @@ func (b *bridge) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 	}
 
 	return b.c.Bus().Subscribe(key, n...)
+}
+
+func (b *bridge) VideoSource(key *ari.Key, channelID string) error {
+	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeVideoSource",
+		Key:  key,
+		BridgeVideoSource: &proxy.BridgeVideoSource{
+			Channel: channelID,
+		},
+	})
+}
+
+func (b *bridge) VideoSourceDelete(key *ari.Key) error {
+	return b.c.commandRequest(&proxy.Request{
+		Kind: "BridgeVideoSourceDelete",
+		Key:  key,
+	})
 }

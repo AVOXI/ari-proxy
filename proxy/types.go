@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
+	"github.com/CyCoreSystems/ari/v5"
 )
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
 var AnnouncementInterval = time.Minute
+// EntityCheckInterval is the interval between checks against Asterisk entity ID
+var EntityCheckInterval = time.Second * 10
 
 // Announcement describes the structure of an ARI proxy's announcement of availability on the network.  These are sent periodically and upon request (by a Ping).
 type Announcement struct {
@@ -113,19 +115,21 @@ type Request struct {
 	BridgePlay          *BridgePlay          `json:"bridge_play,omitempty"`
 	BridgeRecord        *BridgeRecord        `json:"bridge_record,omitempty"`
 	BridgeRemoveChannel *BridgeRemoveChannel `json:"bridge_remove_channel,omitempty"`
+	BridgeVideoSource   *BridgeVideoSource   `json:"bridge_video_source,omitempty"`
 
-	ChannelCreate    *ChannelCreate    `json:"channel_create,omitempty"`
-	ChannelContinue  *ChannelContinue  `json:"channel_continue,omitempty"`
-	ChannelDial      *ChannelDial      `json:"channel_dial,omitempty"`
-	ChannelHangup    *ChannelHangup    `json:"channel_hangup,omitempty"`
-	ChannelMOH       *ChannelMOH       `json:"channel_moh,omitempty"`
-	ChannelMute      *ChannelMute      `json:"channel_mute,omitempty"`
-	ChannelOriginate *ChannelOriginate `json:"channel_originate,omitempty"`
-	ChannelPlay      *ChannelPlay      `json:"channel_play,omitempty"`
-	ChannelRecord    *ChannelRecord    `json:"channel_record,omitempty"`
-	ChannelSendDTMF  *ChannelSendDTMF  `json:"channel_send_dtmf,omitempty"`
-	ChannelSnoop     *ChannelSnoop     `json:"channel_snoop,omitempty"`
-	ChannelVariable  *ChannelVariable  `json:"channel_variable,omitempty"`
+	ChannelCreate        *ChannelCreate        `json:"channel_create,omitempty"`
+	ChannelContinue      *ChannelContinue      `json:"channel_continue,omitempty"`
+	ChannelDial          *ChannelDial          `json:"channel_dial,omitempty"`
+	ChannelHangup        *ChannelHangup        `json:"channel_hangup,omitempty"`
+	ChannelMOH           *ChannelMOH           `json:"channel_moh,omitempty"`
+	ChannelMute          *ChannelMute          `json:"channel_mute,omitempty"`
+	ChannelOriginate     *ChannelOriginate     `json:"channel_originate,omitempty"`
+	ChannelPlay          *ChannelPlay          `json:"channel_play,omitempty"`
+	ChannelRecord        *ChannelRecord        `json:"channel_record,omitempty"`
+	ChannelSendDTMF      *ChannelSendDTMF      `json:"channel_send_dtmf,omitempty"`
+	ChannelSnoop         *ChannelSnoop         `json:"channel_snoop,omitempty"`
+	ChannelExternalMedia *ChannelExternalMedia `json:"channel_external_media,omitempty"`
+	ChannelVariable      *ChannelVariable      `json:"channel_variable,omitempty"`
 
 	DeviceStateUpdate *DeviceStateUpdate `json:"device_state_update,omitempty"`
 
@@ -160,6 +164,15 @@ type AsteriskVariableSet struct {
 type BridgeAddChannel struct {
 	// Channel is the channel ID to add to the bridge
 	Channel string `json:"channel"`
+
+	// AbsorbDTMF indicates that DTMF coming from this channel will not be passed through to the bridge
+	AbsorbDTMF bool `json:"absorbDTMF,omitempty"`
+
+	// Mute indicates that the channel should be muted, preventing audio from it passing through to the bridge
+	Mute bool `json:"mute,omitempty"`
+
+	// Role indicates the channel's role in the bridge
+	Role string `json:"role,omitempty"`
 }
 
 // BridgeCreate is the request type for creating a bridge
@@ -200,6 +213,12 @@ type BridgeRecord struct {
 // BridgeRemoveChannel is the request for removing a channel on the bridge
 type BridgeRemoveChannel struct {
 	// Channel is the name of the channel to remove
+	Channel string `json:"channel"`
+}
+
+// BridgeVideoSource describes the details of a request to set the video source of a bridge explicitly
+type BridgeVideoSource struct {
+	// Channel is the name of the channel to use as the explicit video source
 	Channel string `json:"channel"`
 }
 
@@ -288,6 +307,11 @@ type ChannelSnoop struct {
 
 	// Options describe the parameters for the snoop session
 	Options *ari.SnoopOptions `json:"options,omitempty"`
+}
+
+// ChannelExternalMedia describes the request for an external media channel
+type ChannelExternalMedia struct {
+	Options ari.ExternalMediaOptions `json:"options"`
 }
 
 // ChannelVariable is the request type to read or modify a channel variable

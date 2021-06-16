@@ -3,9 +3,9 @@ package client
 import (
 	"time"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari/rid"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
 )
 
 type channel struct {
@@ -46,11 +46,13 @@ func (c *channel) Originate(referenceKey *ari.Key, o ari.OriginateRequest) (*ari
 }
 
 func (c *channel) StageOriginate(referenceKey *ari.Key, o ari.OriginateRequest) (*ari.ChannelHandle, error) {
-
 	if o.ChannelID == "" {
 		o.ChannelID = rid.New(rid.Channel)
 	}
 
+	// We go ahead an call the createRequest on the server so that we lock in an
+	// Asterisk box at the time of staging even though this staging call will
+	// never actually be used.
 	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelStageOriginate",
 		Key:  referenceKey,
@@ -244,6 +246,8 @@ func (c *channel) Snoop(key *ari.Key, snoopID string, opts *ari.SnoopOptions) (*
 }
 
 func (c *channel) StageSnoop(key *ari.Key, snoopID string, opts *ari.SnoopOptions) (*ari.ChannelHandle, error) {
+	// this getRequest is done merely to locate the Asterisk box on which the
+	// snoop will be initiated.  It will never actually be Exec'd
 	k, err := c.c.getRequest(&proxy.Request{
 		Kind: "ChannelStageSnoop",
 		Key:  key,
@@ -261,6 +265,47 @@ func (c *channel) StageSnoop(key *ari.Key, snoopID string, opts *ari.SnoopOption
 	}), nil
 }
 
+func (c *channel) ExternalMedia(referenceKey *ari.Key, opts ari.ExternalMediaOptions) (*ari.ChannelHandle, error) {
+	if opts.ChannelID == "" {
+		opts.ChannelID = rid.New(rid.Channel)
+	}
+	k, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelExternalMedia",
+		Key:  referenceKey,
+		ChannelExternalMedia: &proxy.ChannelExternalMedia{
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ari.NewChannelHandle(k, c, nil), nil
+}
+
+func (c *channel) StageExternalMedia(referenceKey *ari.Key, opts ari.ExternalMediaOptions) (*ari.ChannelHandle, error) {
+	if opts.ChannelID == "" {
+		opts.ChannelID = rid.New(rid.Channel)
+	}
+
+	// We go ahead an call the createRequest on the server so that we lock in an
+	// Asterisk box at the time of staging even though this staging call will
+	// never actually be used.
+	k, err := c.c.createRequest(&proxy.Request{
+		Kind: "ChannelStageOriginate",
+		Key:  referenceKey,
+		ChannelExternalMedia: &proxy.ChannelExternalMedia{
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ari.NewChannelHandle(k, c, func(h *ari.ChannelHandle) error {
+		_, err := c.ExternalMedia(k, opts)
+		return err
+	}), nil
+}
+
 func (c *channel) Dial(key *ari.Key, caller string, timeout time.Duration) error {
 	return c.c.commandRequest(&proxy.Request{
 		Kind: "ChannelDial",
@@ -273,6 +318,10 @@ func (c *channel) Dial(key *ari.Key, caller string, timeout time.Duration) error
 }
 
 func (c *channel) Play(key *ari.Key, playbackID string, mediaURI string) (*ari.PlaybackHandle, error) {
+	if playbackID == "" {
+		playbackID = rid.New(rid.Playback)
+	}
+
 	k, err := c.c.createRequest(&proxy.Request{
 		Kind: "ChannelPlay",
 		Key:  key,

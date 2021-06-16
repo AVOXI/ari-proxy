@@ -1,17 +1,16 @@
 package main
 
 import (
+	"context"
 	"sync"
 
-	"golang.org/x/net/context"
-
 	"github.com/inconshreveable/log15"
+	"github.com/rotisserie/eris"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari/ext/play"
-	"github.com/CyCoreSystems/ari/rid"
-	"github.com/pkg/errors"
+	"github.com/CyCoreSystems/ari-proxy/v5/client"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/ext/play"
+	"github.com/CyCoreSystems/ari/v5/rid"
 )
 
 var ariApp = "test"
@@ -51,7 +50,7 @@ func appStart(ctx context.Context, cl ari.Client) func(*ari.ChannelHandle, *ari.
 
 		if err := h.Answer(); err != nil {
 			log.Error("failed to answer call", "error", err)
-			//return
+			// return
 		}
 
 		if err := ensureBridge(ctx, cl, h.Key()); err != nil {
@@ -83,7 +82,7 @@ func ensureBridge(ctx context.Context, cl ari.Client, src *ari.Key) (err error) 
 	bridge, err = cl.Bridge().Create(key, "mixing", key.ID)
 	if err != nil {
 		bridge = nil
-		return errors.Wrap(err, "failed to create bridge")
+		return eris.Wrap(err, "failed to create bridge")
 	}
 
 	wg := new(sync.WaitGroup)

@@ -3,17 +3,26 @@ package server
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/proxy"
-	"github.com/CyCoreSystems/ari-proxy/server/dialog"
-	"github.com/CyCoreSystems/ari/client/native"
+	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
+	"github.com/CyCoreSystems/ari-proxy/v5/server/dialog"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/client/native"
+	"github.com/rotisserie/eris"
 
 	"github.com/inconshreveable/log15"
-	"github.com/nats-io/nats"
-	"github.com/pkg/errors"
+	"github.com/nats-io/nats.go"
 )
+
+// DefaultReconnectionAttemts is the default number of reconnection attempts
+// It implements a hard coded fault tolerance for a starting NATS cluster
+const DefaultNATSReconnectionAttemts = 5
+
+// DefaultNATSReconnectionWait is the default wating time between each reconnection
+// attempt
+const DefaultNATSReconnectionWait = 5 * time.Second
 
 // Server describes the asterisk-facing ARI proxy server
 type Server struct {
@@ -66,18 +75,25 @@ func (s *Server) Listen(ctx context.Context, ariOpts *native.Options, natsURI st
 	// Connect to ARI
 	s.ari, err = native.Connect(ariOpts)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to ARI")
+		return eris.Wrap(err, "failed to connect to ARI")
 	}
 	defer s.ari.Close()
 
 	// Connect to NATS
 	nc, err := nats.Connect(natsURI)
+	reconnectionAttempts := DefaultNATSReconnectionAttemts
+	for err == nats.ErrNoServers && reconnectionAttempts > 0 {
+		s.Log.Info("retrying to connect to NATS server", "attempts", reconnectionAttempts)
+		time.Sleep(DefaultNATSReconnectionWait)
+        	nc, err = nats.Connect(natsURI)
+                reconnectionAttempts -= 1
+	}
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to NATS")
+		return eris.Wrap(err, "failed to connect to NATS")
 	}
 	s.nats, err = nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 	if err != nil {
-		return errors.Wrap(err, "failed to encode NATS connection")
+		return eris.Wrap(err, "failed to encode NATS connection")
 	}
 	defer s.nats.Close()
 
@@ -120,12 +136,12 @@ func (s *Server) listen(ctx context.Context) error {
 
 	ret, err := s.ari.Asterisk().Info(nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to get Asterisk ID")
+		return eris.Wrap(err, "failed to get Asterisk ID")
 	}
 
 	s.AsteriskID = ret.SystemInfo.EntityID
 	if s.AsteriskID == "" {
-		return errors.New("empty Asterisk ID")
+		return eris.New("empty Asterisk ID")
 	}
 
 	// Store the ARI application name for top-level access
@@ -138,7 +154,7 @@ func (s *Server) listen(ctx context.Context) error {
 	// ping handler
 	pingSub, err := s.nats.Subscribe(proxy.PingSubject(s.NATSPrefix), s.pingHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to subscribe to pings")
+		return eris.Wrap(err, "failed to subscribe to pings")
 	}
 	defer wg.Add(pingSub.Unsubscribe)
 
@@ -148,69 +164,69 @@ func (s *Server) listen(ctx context.Context) error {
 	// get handlers
 	allGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", "", ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create get-all subscription")
+		return eris.Wrap(err, "failed to create get-all subscription")
 	}
 	defer wg.Add(allGet.Unsubscribe)()
 
 	appGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create get-app subscription")
+		return eris.Wrap(err, "failed to create get-app subscription")
 	}
 	defer wg.Add(appGet.Unsubscribe)()
 	idGet, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "get", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create get-id subscription")
+		return eris.Wrap(err, "failed to create get-id subscription")
 	}
 	defer wg.Add(idGet.Unsubscribe)()
 
 	// data handlers
 	allData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", "", ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-all subscription")
+		return eris.Wrap(err, "failed to create data-all subscription")
 	}
 	defer wg.Add(allData.Unsubscribe)()
 	appData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-app subscription")
+		return eris.Wrap(err, "failed to create data-app subscription")
 	}
 	defer wg.Add(appData.Unsubscribe)()
 	idData, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "data", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create data-id subscription")
+		return eris.Wrap(err, "failed to create data-id subscription")
 	}
 	defer wg.Add(idData.Unsubscribe)()
 
 	// command handlers
 	allCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", "", ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create command-all subscription")
+		return eris.Wrap(err, "failed to create command-all subscription")
 	}
 	defer wg.Add(allCommand.Unsubscribe)()
 	appCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, ""), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create command-app subscription")
+		return eris.Wrap(err, "failed to create command-app subscription")
 	}
 	defer wg.Add(appCommand.Unsubscribe)()
 	idCommand, err := s.nats.Subscribe(proxy.Subject(s.NATSPrefix, "command", s.Application, s.AsteriskID), requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create command-id subscription")
+		return eris.Wrap(err, "failed to create command-id subscription")
 	}
 	defer wg.Add(idCommand.Unsubscribe)()
 
 	// create handlers
 	allCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", "", ""), "ariproxy", requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create create-all subscription")
+		return eris.Wrap(err, "failed to create create-all subscription")
 	}
 	defer wg.Add(allCreate.Unsubscribe)()
 	appCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, ""), "ariproxy", requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create create-app subscription")
+		return eris.Wrap(err, "failed to create create-app subscription")
 	}
 	defer wg.Add(appCreate.Unsubscribe)()
 	idCreate, err := s.nats.QueueSubscribe(proxy.Subject(s.NATSPrefix, "create", s.Application, s.AsteriskID), "ariproxy", requestHandler)
 	if err != nil {
-		return errors.Wrap(err, "failed to create create-id subscription")
+		return eris.Wrap(err, "failed to create create-id subscription")
 	}
 	defer wg.Add(idCreate.Unsubscribe)()
 
@@ -220,8 +236,11 @@ func (s *Server) listen(ctx context.Context) error {
 	// Run the event handler
 	go s.runEventHandler(ctx)
 
+	// Run the entity check handler
+	go s.runEntityChecker(ctx)
+
 	// TODO: run the dialog cleanup routine (remove bindings for entities which no longer exist)
-	//go s.runDialogCleaner(ctx)
+	// go s.runDialogCleaner(ctx)
 
 	// Close the readyChannel to indicate that we are operational
 	if s.readyCh != nil {
@@ -231,6 +250,30 @@ func (s *Server) listen(ctx context.Context) error {
 	// Wait for context closure to exit
 	<-ctx.Done()
 	return ctx.Err()
+}
+
+// runEntityChecker runs the periodic check againt Asterisk entity id
+func (s *Server) runEntityChecker(ctx context.Context) {
+	ticker := time.NewTicker(proxy.EntityCheckInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			info, err := s.ari.Asterisk().Info(nil)
+			if err != nil {
+				s.Log.Error("failed to get info from Asterisk", "error", err)
+				continue
+			}
+			if s.AsteriskID != info.SystemInfo.EntityID {
+				s.Log.Warn("system entitiy id changed", "old", s.AsteriskID, "new", info.SystemInfo.EntityID)
+				// We need to exit with non-zero to make sure systemd restarts when service defined with Restart=on-failure
+				os.Exit(1)
+			}
+		}
+	}
 }
 
 // runAnnouncer runs the periodic discovery announcer
@@ -285,7 +328,9 @@ func (s *Server) runEventHandler(ctx context.Context) {
 
 // pingHandler publishes the server's presence
 func (s *Server) pingHandler(m *nats.Msg) {
-	s.announce()
+	if s.ari.Connected() {
+		s.announce()
+	}
 }
 
 // publish sends a message out over NATS, logging any error
@@ -299,6 +344,10 @@ func (s *Server) publish(subject string, msg interface{}) {
 func (s *Server) newRequestHandler(ctx context.Context) func(subject string, reply string, req *proxy.Request) {
 	ts := int64(0)
 	return func(subject string, reply string, req *proxy.Request) {
+		if !s.ari.Connected() {
+			s.sendError(reply, eris.New("ARI connection is down"))
+			return
+		}
 		go s.dispatchRequest(ctx, reply, req, &ts)
 	}
 }
@@ -389,6 +438,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.bridgeSubscribe
 	case "BridgeUnsubscribe":
 		f = s.bridgeUnsubscribe
+	case "BridgeVideoSource":
+		f = s.bridgeVideoSource
+	case "BridgeVideoSourceDelete":
+		f = s.bridgeVideoSourceDelete
 	case "ChannelAnswer":
 		f = s.channelAnswer
 	case "ChannelBusy":
@@ -437,6 +490,10 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelSnoop
 	case "ChannelStageSnoop":
 		f = s.channelStageSnoop
+	case "ChannelExternalMedia":
+		f = s.channelExternalMedia
+	case "ChannelStageExternalMedia":
+		f = s.channelStageExternalMedia
 	case "ChannelStopHold":
 		f = s.channelStopHold
 	case "ChannelStopMOH":
@@ -525,7 +582,7 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.soundList
 	default:
 		f = func(ctx context.Context, reply string, req *proxy.Request) {
-			s.sendError(reply, errors.New("Not implemented"))
+			s.sendError(reply, eris.New("Not implemented"))
 		}
 	}
 

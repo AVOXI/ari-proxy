@@ -7,10 +7,10 @@ import (
 
 	"time"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/CyCoreSystems/ari-proxy/client"
-	"github.com/CyCoreSystems/ari/rid"
-	"github.com/nats-io/nats"
+	"github.com/CyCoreSystems/ari-proxy/v5/client"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/CyCoreSystems/ari/v5/rid"
+	"github.com/nats-io/nats.go"
 )
 
 type srv struct {

@@ -3,8 +3,8 @@ package integration
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/pkg/errors"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/rotisserie/eris"
 	tmock "github.com/stretchr/testify/mock"
 )
 
@@ -18,7 +18,6 @@ func TestApplicationList(t *testing.T, s Server) {
 	})
 
 	runTest("nonEmptyList", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-
 		h1 := ari.NewKey(ari.ApplicationKey, "1")
 		h2 := ari.NewKey(ari.ApplicationKey, "2")
 		m.Application.On("List", (*ari.Key)(nil)).Return([]*ari.Key{h1, h2}, nil)
@@ -37,7 +36,6 @@ func TestApplicationList(t *testing.T, s Server) {
 				t.Errorf("Expected item 1 to be '2', got %s", items[1].ID)
 			}
 		}
-
 	})
 }
 
@@ -62,12 +60,12 @@ func TestApplicationData(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		m.Application.On("Data", key).Return(nil, expected)
 
 		res, err := cl.Application().Data(key)
-		if err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 		if res != nil {
@@ -77,7 +75,6 @@ func TestApplicationData(t *testing.T, s Server) {
 		m.Shutdown()
 
 		m.Application.AssertCalled(t, "Data", key)
-
 	})
 }
 
@@ -97,11 +94,11 @@ func TestApplicationSubscribe(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		m.Application.On("Subscribe", key, "2").Return(expected)
 
-		if err := cl.Application().Subscribe(key, "2"); err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err := cl.Application().Subscribe(key, "2"); err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 
@@ -127,11 +124,11 @@ func TestApplicationUnsubscribe(t *testing.T, s Server) {
 	})
 
 	runTest("error", t, s, func(t *testing.T, m *mock, cl ari.Client) {
-		expected := errors.New("unknown error")
+		expected := eris.New("unknown error")
 
 		m.Application.On("Unsubscribe", key, "2").Return(expected)
 
-		if err := cl.Application().Unsubscribe(key, "2"); err == nil || errors.Cause(err).Error() != expected.Error() {
+		if err := cl.Application().Unsubscribe(key, "2"); err == nil || eris.Cause(err).Error() != expected.Error() {
 			t.Errorf("Expected error '%v', got '%v'", expected, err)
 		}
 
@@ -156,5 +153,4 @@ func TestApplicationGet(t *testing.T, s Server) {
 
 		m.Application.AssertCalled(t, "Data", key)
 	})
-
 }

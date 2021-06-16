@@ -8,19 +8,19 @@ import (
 
 	"sync"
 
-	"github.com/CyCoreSystems/ari"
-	"github.com/nats-io/nats"
-	"github.com/pkg/errors"
+	"github.com/CyCoreSystems/ari/v5"
+	"github.com/nats-io/nats.go"
+	"github.com/rotisserie/eris"
 )
 
 func natsConnect() (*nats.EncodedConn, error) {
 	c, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to NATS")
+		return nil, eris.Wrap(err, "failed to connect to NATS")
 	}
 	nc, err := nats.NewEncodedConn(c, nats.JSON_ENCODER)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to encode NATS connection")
+		return nil, eris.Wrap(err, "failed to encode NATS connection")
 	}
 	return nc, err
 }
@@ -44,7 +44,6 @@ func runTest(desc string, t *testing.T, s Server, fn testHandler) {
 	}()
 
 	t.Run(desc, func(t *testing.T) {
-
 		// setup mocking
 		m := standardMock()
 
@@ -89,7 +88,6 @@ func runTest(desc string, t *testing.T, s Server, fn testHandler) {
 				fmt.Fprintf(os.Stderr, "Timeouts: %d\n", timeout)
 			}
 		}
-
 	})
 }
 
