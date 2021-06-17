@@ -610,9 +610,9 @@ func (s *Server) sendError(reply string, err error) {
 func (s *Server) logEventWithTimestamp(e ari.Event, ts *int64) {
 	eventTs := time.Now().Unix()
 	if *ts == 0 {
-		s.Log.Debug("event received", "kind", e.GetType(), "time received", eventTs)
+		s.Log.Debug("event received", "kind", e.GetType(), "keys", e.Keys(), "time received", eventTs)
 	} else {
-		s.Log.Debug("event received", "kind", e.GetType(), "time received", eventTs, "delta", eventTs-*ts)
+		s.Log.Debug("event received", "kind", e.GetType(), "keys", e.Keys(), "time received", eventTs, "delta", eventTs-*ts)
 	}
 	*ts = eventTs
 }
@@ -620,9 +620,9 @@ func (s *Server) logEventWithTimestamp(e ari.Event, ts *int64) {
 func (s *Server) logRequestWithTimestamp(req *proxy.Request, ts *int64) {
 	reqTs := time.Now().Unix()
 	if *ts == 0 {
-		s.Log.Debug("received request", "kind", req.Kind, "time received", reqTs)
+		s.Log.Debug("received request", "kind", req.Kind, "key", req.Key, "time received", reqTs)
 	} else {
-		s.Log.Debug("received request", "kind", req.Kind, "time received", reqTs, "delta", reqTs-*ts)
+		s.Log.Debug("received request", "kind", req.Kind, "key", req.Key, "time received", reqTs, "delta", reqTs-*ts)
 	}
 	*ts = reqTs
 }
