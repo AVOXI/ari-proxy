@@ -311,6 +311,7 @@ func (s *Server) announce() {
 func (s *Server) runEventHandler(ctx context.Context) {
 	sub := s.ari.Bus().Subscribe(nil, ari.Events.All)
 	defer sub.Cancel()
+	ts := int64(0)
 
 	for {
 		s.Log.Debug("listening for events", "application", s.Application)
@@ -318,7 +319,7 @@ func (s *Server) runEventHandler(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case e := <-sub.Events():
-			s.Log.Debug("event received", "kind", e.GetType(), "keys", e.Keys())
+			s.logEventWithTimestamp(e, &ts)
 
 			if s.Metrics != nil {
 				s.Metrics.OnEvent(e.GetType())
@@ -352,21 +353,22 @@ func (s *Server) publish(subject string, msg interface{}) {
 
 // newRequestHandler returns a context-wrapped nats.Handler to handle requests
 func (s *Server) newRequestHandler(ctx context.Context) func(subject string, reply string, req *proxy.Request) {
+	ts := int64(0)
 	return func(subject string, reply string, req *proxy.Request) {
 		if !s.ari.Connected() {
 			s.sendError(reply, eris.New("ARI connection is down"))
 			return
 		}
-		go s.dispatchRequest(ctx, reply, req)
+		go s.dispatchRequest(ctx, reply, req, &ts)
 	}
 }
 
 // TODO: see if there is a more programmatic approach to this
 // nolint: gocyclo
-func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request) {
+func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.Request, ts *int64) {
 	var f func(context.Context, string, *proxy.Request)
 
-	s.Log.Debug("received request", "kind", req.Kind, "key", req.Key)
+	s.logRequestWithTimestamp(req, ts)
 	switch req.Kind {
 	case "ApplicationData":
 		f = s.applicationData
@@ -603,6 +605,26 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 
 func (s *Server) sendError(reply string, err error) {
 	s.publish(reply, proxy.NewErrorResponse(err))
+}
+
+func (s *Server) logEventWithTimestamp(e ari.Event, ts *int64) {
+	eventTs := time.Now().Unix()
+	if *ts == 0 {
+		s.Log.Debug("event received", "kind", e.GetType(), "time received", eventTs)
+	} else {
+		s.Log.Debug("event received", "kind", e.GetType(), "time received", eventTs, "delta", eventTs-*ts)
+	}
+	*ts = eventTs
+}
+
+func (s *Server) logRequestWithTimestamp(req *proxy.Request, ts *int64) {
+	reqTs := time.Now().Unix()
+	if *ts == 0 {
+		s.Log.Debug("received request", "kind", req.Kind, "time received", reqTs)
+	} else {
+		s.Log.Debug("received request", "kind", req.Kind, "time received", reqTs, "delta", reqTs-*ts)
+	}
+	*ts = reqTs
 }
 
 /*
