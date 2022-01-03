@@ -10,9 +10,7 @@ require (
 	github.com/CyCoreSystems/ari-proxy/v5 v5.0.0-00010101000000-000000000000
 	github.com/CyCoreSystems/ari/v5 v5.2.0
 	github.com/inconshreveable/log15 v0.0.0-20201112154412-8562bdadbbac
-	github.com/nats-io/nats-server/v2 v2.6.6 // indirect
 	github.com/nats-io/nats.go v1.13.1-0.20211122170419-d7c1d78a50fc
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/rotisserie/eris v0.5.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
