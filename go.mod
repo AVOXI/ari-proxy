@@ -2,7 +2,7 @@ module github.com/AVOXI/ari-proxy/v5
 
 go 1.14
 
-replace github.com/CyCoreSystems/ari/v5 => github.com/AVOXI/ari/v5 v5.0.7-0.20220104051147-f4de04b6d70b
+replace github.com/CyCoreSystems/ari/v5 => github.com/AVOXI/ari/v5 v5.0.7-0.20220105030036-1b48da28b0de
 
 replace github.com/CyCoreSystems/ari-proxy/v5 => ./
 
