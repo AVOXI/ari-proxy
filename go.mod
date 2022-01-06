@@ -2,7 +2,7 @@ module github.com/AVOXI/ari-proxy/v5
 
 go 1.14
 
-replace github.com/CyCoreSystems/ari/v5 => github.com/AVOXI/ari/v5 v5.0.7-0.20220105030036-1b48da28b0de
+replace github.com/CyCoreSystems/ari/v5 => github.com/AVOXI/ari/v5 v5.0.7-0.20220105152609-077dde1bf911
 
 replace github.com/CyCoreSystems/ari-proxy/v5 => ./
 
@@ -18,7 +18,7 @@ require (
 	github.com/nats-io/nats.go v1.10.1-0.20210330225420-a0b1f60162f8
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/rotisserie/eris v0.5.1
-	github.com/spf13/afero v1.7.1 // indirect
+	github.com/spf13/afero v1.8.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/cobra v0.0.2
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
