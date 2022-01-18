@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/CyCoreSystems/ari-proxy/v5/proxy"
+	"github.com/AVOXI/ari-proxy/v5/proxy"
 )
 
 func (s *Server) soundData(ctx context.Context, reply string, req *proxy.Request) {

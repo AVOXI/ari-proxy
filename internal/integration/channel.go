@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CyCoreSystems/ari/v5"
-	"github.com/CyCoreSystems/ari/v5/rid"
+	"github.com/AVOXI/ari/v5"
+	"github.com/AVOXI/ari/v5/rid"
 	tmock "github.com/stretchr/testify/mock"
 )
 
@@ -14,6 +14,7 @@ var _ = tmock.Anything
 
 var nonEmpty = tmock.MatchedBy(func(s string) bool { return s != "" })
 
+//nolint:govet // fix in the future
 func TestChannelData(t *testing.T, s Server) {
 	key := ari.NewKey(ari.ChannelKey, "c1")
 	runTest("simple", t, s, func(t *testing.T, m *mock, cl ari.Client) {

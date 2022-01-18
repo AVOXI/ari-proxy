@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/CyCoreSystems/ari-proxy/v5/internal/integration"
+	"github.com/AVOXI/ari-proxy/v5/internal/integration"
 )
 
 func TestEndpointList(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CyCoreSystems/ari/v5/rid"
+	"github.com/AVOXI/ari/v5/rid"
 )
 
 func TestHash(t *testing.T) {

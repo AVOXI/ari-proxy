@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CyCoreSystems/ari/v5"
-	"github.com/CyCoreSystems/ari/v5/client/arimocks"
+	"github.com/AVOXI/ari/v5"
+	"github.com/AVOXI/ari/v5/client/arimocks"
 	tmock "github.com/stretchr/testify/mock"
 )
 
