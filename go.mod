@@ -10,11 +10,11 @@ require (
 	github.com/CyCoreSystems/ari-proxy/v5 v5.0.0-00010101000000-000000000000
 	github.com/CyCoreSystems/ari/v5 v5.0.0-00010101000000-000000000000
 	github.com/inconshreveable/log15 v0.0.0-20201112154412-8562bdadbbac
-	github.com/nats-io/nats.go v1.10.1-0.20210330225420-a0b1f60162f8
+	github.com/nats-io/nats.go v1.20.0
 	github.com/rotisserie/eris v0.5.1
 	github.com/spf13/cobra v0.0.2
 	github.com/spf13/viper v1.0.2
-	github.com/stretchr/testify latest
+	github.com/stretchr/testify v1.8.1
 )
 
 require (
@@ -28,6 +28,7 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/nats-io/nats-server/v2 v2.9.7 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
@@ -37,12 +38,12 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
-	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
-	golang.org/x/text v0.3.4 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
+	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
+	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
