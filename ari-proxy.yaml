@@ -1,3 +1,4 @@
+verbose: true
 ari:
     username: admin
     password: admin

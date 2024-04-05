@@ -41,9 +41,10 @@ func Listen(ctx context.Context, ac ari.Client, h func(*ari.ChannelHandle, *ari.
 
 func listenProcessor(ac ari.Client, h func(*ari.ChannelHandle, *ari.StasisStart)) func(*nats.Msg) {
 	return func(m *nats.Msg) {
+		Logger.Debug("decode event", "data", m.Data)
 		e, err := ari.DecodeEvent(m.Data)
 		if err != nil {
-			Logger.Error("failed to decode event", "error", err)
+			Logger.Error("failed to decode event", "error", err, "data", m.Data)
 			return
 		}
 
