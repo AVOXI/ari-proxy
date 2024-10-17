@@ -407,6 +407,7 @@ func (c *channel) Subscribe(key *ari.Key, n ...string) ari.Subscription {
 }
 
 func (c *channel) GetVariable(key *ari.Key, name string) (string, error) {
+	c.c.log.Info("GetVariable", "key", key.ID, "name", name)
 	data, err := c.c.dataRequest(&proxy.Request{
 		Kind: "ChannelVariableGet",
 		Key:  key,
