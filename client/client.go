@@ -198,6 +198,10 @@ type Client struct {
 	closed bool
 }
 
+func isNotErr(r *log15.Record) bool {
+	return r.Lvl > log15.LvlError
+}
+
 // New creates a new Client to the Asterisk ARI NATS proxy.
 func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -215,7 +219,10 @@ func New(ctx context.Context, opts ...OptionFunc) (*Client, error) {
 		},
 		cancel: cancel,
 	}
-	c.log.SetHandler(log15.DiscardHandler())
+	c.log.SetHandler(log15.MultiHandler(
+		log15.LvlFilterHandler(log15.LvlError, log15.StreamHandler(os.Stderr, &JsonFormatter{})),
+		log15.FilterHandler(isNotErr, log15.StreamHandler(os.Stdout, &JsonFormatter{})),
+	))
 
 	// Load environment-based configurations
 	if os.Getenv("NATS_URI") != "" {
