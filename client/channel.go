@@ -282,6 +282,23 @@ func (c *channel) ExternalMedia(referenceKey *ari.Key, opts ari.ExternalMediaOpt
 	return ari.NewChannelHandle(k, c, nil), nil
 }
 
+func (c *channel) RecordingFork(key *ari.Key, opts ari.RecordingForkOptions) (*ari.RecordingForkResult, error) {
+	data, err := c.c.dataRequest(&proxy.Request{
+		Kind: "ChannelRecordingFork",
+		Key:  key,
+		ChannelRecordingFork: &proxy.ChannelRecordingFork{
+			Options: opts,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return &ari.RecordingForkResult{}, nil
+	}
+	return &ari.RecordingForkResult{SIPStatus: data.RecordingForkSIPStatus}, nil
+}
+
 func (c *channel) StageExternalMedia(referenceKey *ari.Key, opts ari.ExternalMediaOptions) (*ari.ChannelHandle, error) {
 	if opts.ChannelID == "" {
 		opts.ChannelID = rid.New(rid.Channel)

@@ -359,6 +359,25 @@ func (s *Server) channelExternalMedia(ctx context.Context, reply string, req *pr
 	})
 }
 
+func (s *Server) channelRecordingFork(ctx context.Context, reply string, req *proxy.Request) {
+	if req.ChannelRecordingFork == nil {
+		s.sendError(reply, errors.New("RecordingFork options are required"))
+		return
+	}
+	result, err := s.ari.Channel().RecordingFork(req.Key, req.ChannelRecordingFork.Options)
+	if err != nil {
+		s.sendError(reply, err)
+		return
+	}
+	status := 0
+	if result != nil {
+		status = result.SIPStatus
+	}
+	s.publish(reply, &proxy.Response{
+		Data: &proxy.EntityData{RecordingForkSIPStatus: status},
+	})
+}
+
 func (s *Server) channelStageExternalMedia(ctx context.Context, reply string, req *proxy.Request) {
 	if req.ChannelExternalMedia == nil {
 		s.sendError(reply, errors.New("ExternalMediaOptions is required"))

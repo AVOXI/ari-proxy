@@ -502,6 +502,8 @@ func (s *Server) dispatchRequest(ctx context.Context, reply string, req *proxy.R
 		f = s.channelStageSnoop
 	case "ChannelExternalMedia":
 		f = s.channelExternalMedia
+	case "ChannelRecordingFork":
+		f = s.channelRecordingFork
 	case "ChannelStageExternalMedia":
 		f = s.channelStageExternalMedia
 	case "ChannelStopHold":
