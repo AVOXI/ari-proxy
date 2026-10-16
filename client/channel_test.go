@@ -49,3 +49,11 @@ func TestChannelStopMOH(t *testing.T) {
 func TestChannelContinue(t *testing.T) {
 	integration.TestChannelContinue(t, &srv{})
 }
+
+func TestChannelRecordingFork(t *testing.T) {
+	integration.TestChannelRecordingFork(t, &srv{})
+}
+
+func TestChannelRecordingForkDirect(t *testing.T) {
+	integration.TestChannelRecordingForkDirect(t, &srv{})
+}

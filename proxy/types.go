@@ -10,6 +10,7 @@ import (
 
 // AnnouncementInterval is the amount of time to wait between periodic service availability announcements
 var AnnouncementInterval = time.Minute
+
 // EntityCheckInterval is the interval between checks against Asterisk entity ID
 var EntityCheckInterval = time.Second * 10
 
@@ -51,6 +52,8 @@ type EntityData struct {
 	TextMessage     *ari.TextMessageData     `json:"text_message,omitempty"`
 
 	Variable string `json:"variable,omitempty"`
+
+	RecordingForkSIPStatus int `json:"recording_fork_sip_status,omitempty"`
 }
 
 // ErrNotFound indicates that the operation did not return a result
@@ -129,6 +132,7 @@ type Request struct {
 	ChannelSendDTMF      *ChannelSendDTMF      `json:"channel_send_dtmf,omitempty"`
 	ChannelSnoop         *ChannelSnoop         `json:"channel_snoop,omitempty"`
 	ChannelExternalMedia *ChannelExternalMedia `json:"channel_external_media,omitempty"`
+	ChannelRecordingFork *ChannelRecordingFork `json:"channel_recording_fork,omitempty"`
 	ChannelVariable      *ChannelVariable      `json:"channel_variable,omitempty"`
 
 	DeviceStateUpdate *DeviceStateUpdate `json:"device_state_update,omitempty"`
@@ -312,6 +316,11 @@ type ChannelSnoop struct {
 // ChannelExternalMedia describes the request for an external media channel
 type ChannelExternalMedia struct {
 	Options ari.ExternalMediaOptions `json:"options"`
+}
+
+// ChannelRecordingFork is the request to send an in-dialog recording-fork MESSAGE.
+type ChannelRecordingFork struct {
+	Options ari.RecordingForkOptions `json:"options"`
 }
 
 // ChannelVariable is the request type to read or modify a channel variable

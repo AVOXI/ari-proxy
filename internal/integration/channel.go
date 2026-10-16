@@ -1117,3 +1117,87 @@ func TestChannelVariableSet(t *testing.T, s Server) {
 		m.Channel.AssertCalled(t, "SetVariable", &ari.Key{Kind: "", ID: "", Node: "", Dialog: "", App: ""}, "v1", "value")
 	})
 }
+
+func TestChannelRecordingFork(t *testing.T, s Server) {
+	key := ari.NewKey(ari.ChannelKey, "c1")
+	opts := ari.RecordingForkOptions{
+		Action:    "FORK_START",
+		OrgID:     "org1",
+		CallID:    "call1",
+		SentHost:  "10.0.0.1",
+		SentPort:  10000,
+		HeardHost: "10.0.0.1",
+		HeardPort: 10002,
+		Codec:     "PCMU",
+		TimeoutMs: 2000,
+	}
+
+	runTest("ok", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("RecordingFork", key, opts).Return(&ari.RecordingForkResult{SIPStatus: 200}, nil)
+
+		res, err := cl.Channel().RecordingFork(key, opts)
+		if err != nil {
+			t.Errorf("Unexpected error in remote RecordingFork call: %s", err)
+		}
+		if res == nil || res.SIPStatus != 200 {
+			t.Errorf("Expected SIPStatus 200, got %+v", res)
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "RecordingFork", key, opts)
+	})
+
+	runTest("nilResult", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("RecordingFork", key, opts).Return(nil, nil)
+
+		res, err := cl.Channel().RecordingFork(key, opts)
+		if err != nil {
+			t.Errorf("Unexpected error in remote RecordingFork call: %s", err)
+		}
+		if res == nil || res.SIPStatus != 0 {
+			t.Errorf("Expected zero SIPStatus, got %+v", res)
+		}
+
+		m.Shutdown()
+	})
+
+	// Broadcast path: the key has no node or app, so the client keeps the
+	// last error response in order to return its SIP status.
+	runTest("err", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("RecordingFork", key, opts).Return(&ari.RecordingForkResult{SIPStatus: 480}, errors.New("recording fork failed: SIP 480"))
+
+		res, err := cl.Channel().RecordingFork(key, opts)
+		if err == nil {
+			t.Errorf("Expected error in remote RecordingFork call")
+		}
+		if res == nil || res.SIPStatus != 480 {
+			t.Errorf("Expected SIPStatus 480 on error, got %+v", res)
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "RecordingFork", key, opts)
+	})
+}
+
+func TestChannelRecordingForkDirect(t *testing.T, s Server) {
+	key := ari.NewKey(ari.ChannelKey, "c1", ari.WithNode("1"), ari.WithApp("asdf"))
+	opts := ari.RecordingForkOptions{Action: "FORK_STOP", OrgID: "org1", CallID: "call1"}
+
+	runTest("errDirect", t, s, func(t *testing.T, m *mock, cl ari.Client) {
+		m.Channel.On("RecordingFork", key, opts).Return(&ari.RecordingForkResult{SIPStatus: 481}, errors.New("recording fork failed: SIP 481"))
+
+		res, err := cl.Channel().RecordingFork(key, opts)
+		if err == nil {
+			t.Errorf("Expected error in remote RecordingFork call")
+		}
+		if res == nil || res.SIPStatus != 481 {
+			t.Errorf("Expected SIPStatus 481 on error, got %+v", res)
+		}
+
+		m.Shutdown()
+
+		m.Channel.AssertCalled(t, "RecordingFork", key, opts)
+	})
+}

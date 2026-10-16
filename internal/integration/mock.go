@@ -59,6 +59,7 @@ func standardMock() *mock {
 	m.Client.On("Bus").Return(m.Bus)
 
 	m.Client.On("ApplicationName").Return("asdf")
+	m.Client.On("Connected").Return(true)
 	m.Client.On("Asterisk").Return(m.Asterisk)
 	m.Client.On("Application").Return(m.Application)
 	m.Client.On("Bridge").Return(m.Bridge)
