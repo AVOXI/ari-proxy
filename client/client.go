@@ -614,6 +614,8 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 		req.Key = ari.NewKey("", "")
 	}
 
+	var last *proxy.Response
+
 	reply := rid.New("rp")
 
 	rf := &limitedResponseForwarder{
@@ -641,19 +643,20 @@ func (c *Client) makeBroadcastRequestReturnFirstGoodResponse(class string, req *
 				err = eris.New("timeout")
 			}
 
-			return nil, err
+			return last, err
 		case resp, more := <-rf.fwdChan:
 			if !more {
 				if err == nil {
 					err = eris.New("no data")
 				}
 
-				return nil, err
+				return last, err
 			}
 			if resp != nil {
 				if err = resp.Err(); err == nil { // store the error for later return
 					return resp, nil // No error means to return the current value
 				}
+				last = resp
 			}
 		}
 	}

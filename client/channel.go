@@ -283,20 +283,27 @@ func (c *channel) ExternalMedia(referenceKey *ari.Key, opts ari.ExternalMediaOpt
 }
 
 func (c *channel) RecordingFork(key *ari.Key, opts ari.RecordingForkOptions) (*ari.RecordingForkResult, error) {
-	data, err := c.c.dataRequest(&proxy.Request{
+	resp, err := c.c.makeRequest("data", &proxy.Request{
 		Kind: "ChannelRecordingFork",
 		Key:  key,
 		ChannelRecordingFork: &proxy.ChannelRecordingFork{
 			Options: opts,
 		},
 	})
+	var result *ari.RecordingForkResult
+	if resp != nil && resp.Data != nil {
+		result = &ari.RecordingForkResult{SIPStatus: resp.Data.RecordingForkSIPStatus}
+	}
 	if err != nil {
-		return nil, err
+		return result, err
 	}
-	if data == nil {
-		return &ari.RecordingForkResult{}, nil
+	if resp.Err() != nil {
+		return result, resp.Err()
 	}
-	return &ari.RecordingForkResult{SIPStatus: data.RecordingForkSIPStatus}, nil
+	if result == nil {
+		result = &ari.RecordingForkResult{}
+	}
+	return result, nil
 }
 
 func (c *channel) StageExternalMedia(referenceKey *ari.Key, opts ari.ExternalMediaOptions) (*ari.ChannelHandle, error) {

@@ -102,6 +102,14 @@ func TestChannelExternalMedia(t *testing.T) {
 	integration.TestChannelExternalMedia(t, &srv{})
 }
 
+func TestChannelRecordingFork(t *testing.T) {
+	integration.TestChannelRecordingFork(t, &srv{})
+}
+
+func TestChannelRecordingForkDirect(t *testing.T) {
+	integration.TestChannelRecordingForkDirect(t, &srv{})
+}
+
 func TestChannelSendDTMF(t *testing.T) {
 	integration.TestChannelSendDTMF(t, &srv{})
 }

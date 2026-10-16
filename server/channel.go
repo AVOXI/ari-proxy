@@ -365,17 +365,17 @@ func (s *Server) channelRecordingFork(ctx context.Context, reply string, req *pr
 		return
 	}
 	result, err := s.ari.Channel().RecordingFork(req.Key, req.ChannelRecordingFork.Options)
-	if err != nil {
-		s.sendError(reply, err)
-		return
-	}
 	status := 0
 	if result != nil {
 		status = result.SIPStatus
 	}
-	s.publish(reply, &proxy.Response{
+	resp := &proxy.Response{
 		Data: &proxy.EntityData{RecordingForkSIPStatus: status},
-	})
+	}
+	if err != nil {
+		resp.Error = err.Error()
+	}
+	s.publish(reply, resp)
 }
 
 func (s *Server) channelStageExternalMedia(ctx context.Context, reply string, req *proxy.Request) {
